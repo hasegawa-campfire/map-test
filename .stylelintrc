@@ -1,0 +1,14 @@
+{
+  "customSyntax": "postcss-html",
+  "extends": ["stylelint-config-standard-scss", "stylelint-config-recess-order", "stylelint-prettier/recommended"],
+  "rules": {
+    "selector-pseudo-class-no-unknown": [
+      true,
+      {
+        "ignorePseudoClasses": ["global"]
+      }
+    ],
+    "no-descending-specificity": null,
+    "selector-max-id": 0
+  }
+}
