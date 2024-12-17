@@ -1,0 +1,18 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[svelte]": {
+    "editor.defaultFormatter": "svelte.svelte-vscode"
+  },
+  "css.validate": false,
+  "scss.validate": false,
+  "eslint.validate": ["javascript", "typescript", "svelte"],
+  "stylelint.validate": ["css", "scss", "svelte"],
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "never",
+    "source.fixAll.eslint": "explicit",
+    "source.fixAll.stylelint": "explicit"
+  },
+  "svelte.enable-ts-plugin": true,
+  "files.trimTrailingWhitespace": true
+}
