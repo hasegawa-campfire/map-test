@@ -34,7 +34,7 @@ jobs:
 
   deploy:
     needs: build_site
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     permissions:
       pages: write
