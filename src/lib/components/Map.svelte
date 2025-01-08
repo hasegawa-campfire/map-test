@@ -60,6 +60,7 @@
         })
         marker.addClassName('project-marker')
         markers[item.id] = marker
+        if (item.id === selectedId) marker.addClassName('active')
       }
     }
   }, 200)
