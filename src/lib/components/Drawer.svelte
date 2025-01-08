@@ -108,8 +108,7 @@
     width: fit-content;
     max-width: 100%;
     padding: 3px 8px;
-    padding-bottom: 4px;
-    margin-top: 6px;
+    margin-top: 4px;
     overflow: hidden;
     font-size: 12px;
     line-height: 1;
@@ -117,15 +116,16 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     background-color: #f6f8fa;
-    border-bottom: 1px solid #f3f3f3;
     border-radius: 32px;
   }
 
   .amount {
-    margin-top: 6px;
+    padding-top: 2px;
+    margin-top: 4px;
     font-size: 15px;
     font-weight: bold;
     text-align: right;
+    border-top: 1px solid #f3f3f3;
 
     .unit {
       margin-left: 2px;
