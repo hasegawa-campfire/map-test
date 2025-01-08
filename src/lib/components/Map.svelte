@@ -1,14 +1,13 @@
-<script lang="ts">
+<script lang="ts" generics="Item extends { id: string; coords: LngLatLike }">
   import { onMount } from 'svelte'
-  import maplibregl from 'maplibre-gl'
+  import maplibregl, { type LngLatLike } from 'maplibre-gl'
   import 'maplibre-gl/dist/maplibre-gl.css'
   import { debounce } from '$lib/utils'
-  import type { Project as Item } from '$lib/types'
 
   interface Props {
     itemsPromise: Promise<Item[]>
     maxItems?: number
-    onMarkerSelect?: (item: Item | null) => void
+    onMarkerSelect?: (item: NoInfer<Item> | null) => void
   }
 
   let { itemsPromise, maxItems = 50, onMarkerSelect }: Props = $props()
