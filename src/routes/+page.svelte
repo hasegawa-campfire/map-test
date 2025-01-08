@@ -1,57 +1,49 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
-  import maplibregl from 'maplibre-gl'
-  import 'maplibre-gl/dist/maplibre-gl.css'
+  import Map from '$lib/components/Map.svelte'
+  import Drawer from '$lib/components/Drawer.svelte'
+  import projectsPromise from '$lib/projects.svelte'
+  import type { Project } from '$lib/types'
 
-  let mapElement: HTMLDivElement
-  let map: maplibregl.Map
-  let address: string
-  let name: string
+  let selectedProject: Project | null = $state(null)
 
-  onMount(async () => {
-    map = new maplibregl.Map({
-      container: mapElement,
-      style: 'https://tile.openstreetmap.jp/styles/osm-bright-ja/style.json',
-      center: { lng: 139.7024, lat: 35.6598 },
-      zoom: 16,
-      interactive: true,
-    })
-  })
-
-  async function addMarker() {
-    const params = new URLSearchParams({ addr: address, charset: 'UTF8', geosys: 'world' })
-    const res = await fetch(`https://geocode.csis.u-tokyo.ac.jp/cgi-bin/simple_geocode.cgi?${params}`)
-    const xml = await res.text()
-
-    const parser = new DOMParser()
-    const doc = parser.parseFromString(xml, 'application/xml')
-    const coords = {
-      lng: Number(doc.querySelector('longitude')?.textContent ?? 0),
-      lat: Number(doc.querySelector('latitude')?.textContent ?? 0),
-    }
-
-    const popup = new maplibregl.Popup({ closeButton: false }).setText(name)
-    new maplibregl.Marker().setLngLat(coords).setPopup(popup).addTo(map)
-    map.jumpTo({ center: coords })
-
-    name = address = ''
+  function onMarkerSelect(project: Project | null) {
+    selectedProject = project
   }
 </script>
 
-<div class="map" bind:this={mapElement}></div>
+<div class="container">
+  <header>地図から探す</header>
+  <div class="map">
+    <Map itemsPromise={projectsPromise} {onMarkerSelect} />
+    <Drawer project={selectedProject} />
+  </div>
+</div>
 
-<form on:submit|preventDefault={addMarker}>
-  <label>名前: <input type="text" bind:value={name} required /></label>
-  <label>住所: <input type="text" bind:value={address} required /></label>
-  <button type="submit">マーカーを追加</button>
-</form>
-
-<style>
-  .map {
-    height: 600px;
+<style lang="scss">
+  .container {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    grid-template-columns: 1fr;
+    width: 100%;
+    height: 100dvh;
+    overflow: hidden;
   }
 
-  label {
-    display: block;
+  header {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 60px;
+    font-size: 20px;
+    font-weight: bold;
+    box-shadow: 0 0 6px #0002;
+  }
+
+  .map {
+    position: relative;
+    z-index: 0;
+    overflow: hidden;
   }
 </style>
