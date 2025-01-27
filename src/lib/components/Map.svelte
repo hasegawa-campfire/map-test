@@ -3,66 +3,20 @@
   import maplibregl, { type LngLatLike } from 'maplibre-gl'
   import 'maplibre-gl/dist/maplibre-gl.css'
   import { debounce } from '$lib/utils'
+  import markerIconUrl from '$lib/assets/marker.png'
 
   interface Props {
-    itemsPromise: Promise<Item[]>
+    items: Item[]
     maxItems?: number
     onMarkerSelect?: (item: NoInfer<Item> | null) => void
   }
 
-  let { itemsPromise, maxItems = 50, onMarkerSelect }: Props = $props()
+  let { items, maxItems = 50, onMarkerSelect }: Props = $props()
 
   let mapContainer: HTMLDivElement
-  let items: Item[] = []
   let map: maplibregl.Map | null = null
-  const markers: Record<string, maplibregl.Marker> = {}
-  let selectedId = ''
-
-  function onMarkerClick(item: Item) {
-    markers[selectedId]?.removeClassName('active')
-    if (item.id === selectedId) {
-      selectedId = ''
-    } else {
-      selectedId = item.id
-    }
-    markers[selectedId]?.addClassName('active')
-    onMarkerSelect?.(selectedId ? item : null)
-  }
-
-  const updateMarkers = debounce(() => {
-    if (!map) return
-    const bounds = map.getBounds()
-    const visibleItems: Item[] = []
-    const invisibleItems: Item[] = []
-
-    for (const item of items) {
-      if (visibleItems.length < maxItems && bounds.contains(item.coords)) {
-        visibleItems.push(item)
-      } else {
-        invisibleItems.push(item)
-      }
-    }
-
-    for (const item of invisibleItems) {
-      const marker = markers[item.id]
-      if (marker) {
-        marker.remove()
-        delete markers[item.id]
-      }
-    }
-
-    for (const item of visibleItems) {
-      if (!markers[item.id]) {
-        const marker = new maplibregl.Marker({ color: '#ff4f45' }).setLngLat(item.coords).addTo(map)
-        marker.getElement().addEventListener('click', () => {
-          onMarkerClick?.(item)
-        })
-        marker.addClassName('project-marker')
-        markers[item.id] = marker
-        if (item.id === selectedId) marker.addClassName('active')
-      }
-    }
-  }, 200)
+  let selectedId = $state('')
+  let filtedItems: Item[] = $state([])
 
   onMount(() => {
     map = new maplibregl.Map({
@@ -90,24 +44,63 @@
       'bottom-right',
     )
 
-    map.on('moveend', updateMarkers)
-    map.on('zoomend', updateMarkers)
+    const debouncedFilteringItems = debounce(filteringItems, 300)
 
-    itemsPromise.then((v) => {
-      items = v
-      updateMarkers()
+    map.on('move', debouncedFilteringItems)
+    map.on('zoom', debouncedFilteringItems)
+    map.on('resize', debouncedFilteringItems)
+    map.on('click', (e) => {
+      const el = e.originalEvent.target
+      if (el instanceof HTMLElement && el.closest('[data-unselect-ignore]')) return
+      selectMarker(null)
+    })
+    map.on('load', () => {
+      filteringItems()
     })
 
     return () => {
-      for (const marker of Object.values(markers)) marker.remove()
       map?.remove()
     }
   })
+
+  function filteringItems() {
+    if (!map) return
+    const bounds = map.getBounds()
+    filtedItems = items.filter((item) => bounds.contains(item.coords)).slice(0, maxItems)
+  }
+
+  function addMarker(el: HTMLElement, item: Item) {
+    if (!map) return
+
+    const marker = new maplibregl.Marker({ element: el }).setLngLat(item.coords).addTo(map)
+
+    return {
+      destroy() {
+        marker.remove()
+      },
+    }
+  }
+
+  function selectMarker(item: Item | null) {
+    selectedId = item?.id ?? ''
+    onMarkerSelect?.(item)
+  }
 </script>
 
-<svelte:window on:resize={updateMarkers} />
-
-<div class="container" bind:this={mapContainer}></div>
+<div class="container" bind:this={mapContainer}>
+  {#each filtedItems as item (item.id)}
+    <button
+      use:addMarker={item}
+      class="marker"
+      class:active={item.id === selectedId}
+      data-unselect-ignore
+      type="button"
+      onclick={() => selectMarker(item)}
+    >
+      <img class="marker-icon" src={markerIconUrl} alt="" />
+    </button>
+  {/each}
+</div>
 
 <style lang="scss">
   .container {
@@ -117,11 +110,16 @@
     height: 100%;
   }
 
-  :global(.project-marker) {
-    cursor: pointer;
+  .marker {
+    width: fit-content;
+
+    &.active {
+      filter: sepia(0.8) brightness(1.4);
+    }
   }
 
-  :global(.project-marker.active [fill='#ff4f45']) {
-    fill: #ffc23d !important;
+  .marker-icon {
+    display: block;
+    width: 24px;
   }
 </style>

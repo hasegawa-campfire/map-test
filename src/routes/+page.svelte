@@ -1,10 +1,16 @@
 <script lang="ts">
   import Map from '$lib/components/Map.svelte'
   import Drawer from '$lib/components/Drawer.svelte'
-  import projectsPromise from '$lib/projects.svelte'
+  import projectsPromise from '$lib/projects'
   import type { Project } from '$lib/types'
+  import { onMount } from 'svelte'
 
+  let projects: Project[] = $state([])
   let selectedProject: Project | null = $state(null)
+
+  onMount(async () => {
+    projects = await projectsPromise
+  })
 
   function onMarkerSelect(project: Project | null) {
     selectedProject = project
@@ -14,7 +20,7 @@
 <div class="container">
   <header>地図から探す</header>
   <div class="map">
-    <Map itemsPromise={projectsPromise} {onMarkerSelect} />
+    <Map items={projects} {onMarkerSelect} />
     <Drawer project={selectedProject} />
   </div>
 </div>
